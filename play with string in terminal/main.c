@@ -26,7 +26,6 @@ void removeAtIndex(char *str, int index) {
     }
     str[len - 1] = '\0';
 
-    free(str);
 }
 
 int main() {
