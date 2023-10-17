@@ -4,7 +4,7 @@ void logNumber(int number, char *text) {
     printf("\033[0;32m%d\033[0m %s", number, text);
 };
 
-int main() {
+int main(void) {
     int array[] = {9, 5, 2, 7, 1};
     int sortedArray[sizeof(array) / sizeof(array[0])];
 

@@ -47,7 +47,7 @@ int main() {
     }
 
     // Remove unnecessary spaces
-    for (int i = 0; i < strlen(str); i++) {
+    for (int i = 0; i < strlen(str) -1; i++) {
         if (str[i] == ' ' && (i == 0 || str[i + 1] == ' ')) {
             removeAtIndex(str, i);
             i--; // Reduce index to check the next character
