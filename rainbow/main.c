@@ -43,8 +43,6 @@ int main(void) {
     while (!kbhit(&pressedKey)) {
         for (int i = 0; i < 7; i++) {
             new_colors[i] = colors[(i + state) % 7];
-        }
-        for (int i = 0; i < 7; i++) {
             printf("%s%c", new_colors[i], "RAINBOW"[i]);
         }
         printf("\n");

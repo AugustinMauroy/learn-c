@@ -51,5 +51,6 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# Specific files
-/rainbow/rainbow
+# OS-x
+.DS_Store
+
