@@ -12,7 +12,7 @@ int main(void) {
         if(min == max || min + 1 == max) {
             printf("You're cheating!\n");
             printf("Hurensohn!\n");
-            return 1;
+            return EXIT_FAILURE;
         }
 
         int guess = (max + min) / 2;

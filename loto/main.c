@@ -49,9 +49,9 @@ int main(void) {
         printf("You lose!\n");
         printf("Correct numbers: ");
         for (i = 0; i < 6; i++) printf("%d ", num[i]);
-        return 0;
+        return EXIT_SUCCESS;
     };
 
     printf("You win!\n");
-    return 0;
+    return EXIT_SUCCESS;
 }

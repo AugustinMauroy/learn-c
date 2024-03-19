@@ -11,11 +11,11 @@ int main(void){
     printf("\033[0;37m");
     if(inputValue < 0 ) {
         printf("You cannot input negative value");
-        return 1;
+         EXIT_FAILURE;
     }
     for(int i =0 ; i < ARRAY_LENGTH; i++){        
         printf("You got \033[0;32m%d\033[0;37m currency of \033[0;32m%d\033[0;37m €\n", inputValue / possibleCurrency[i], possibleCurrency[i]);
         inputValue = inputValue % possibleCurrency[i];
     };
-    return 0;
+    return EXIT_SUCCESS;
 };

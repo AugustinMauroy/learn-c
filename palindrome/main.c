@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -21,5 +22,5 @@ int main(void) {
         printf("%s n'est pas un palindrome.\n", mot);
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }

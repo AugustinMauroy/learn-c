@@ -52,5 +52,5 @@ int main(void) {
     
     printf("\033[0m Bey!\n Software by: \033[32m@augustinmauroy\033[0m on github\n");
 
-    return 0;
+    return EXIT_SUCCESS;
 }
