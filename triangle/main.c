@@ -1,19 +1,17 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <math.h>
-#include <string.h>
+#include <stdbool.h>
 
-int isRectangle(unsigned int side[3]) {
+bool isRectangle(unsigned int side[3]) {
     if ((side[0])*(side[0]) + (side[1]*side[1]) == (side[2]*side[2])) {
-        return 1;
+        return true;
     } else {
-        return 0;
+        return false;
     }
 };
 
 int main(void) {
     unsigned int side[3];
-    unsigned int orderedSide[3];
     printf("Enter first side: ");
     scanf("%d", &side[0]);
     printf("Enter second side: ");
@@ -21,36 +19,33 @@ int main(void) {
     printf("Enter third side: ");
     scanf("%d", &side[2]);
 
-    for (int i = 0; i < 3; i++) {
-        int min = side[0];
-        int minIndex = 0;
-        for (int j = 0; j < 3; j++) {
-            if (side[j] < min) {
-                min = side[j];
-                minIndex = j;
-            }
-        }
-        orderedSide[i] = min;
-        side[minIndex] = 999;
+    for(int i = 0; i < 3; i++) {
+        for(int j = 0; j < 3; j++) {
+            if(side[i] < side[j]) {
+                unsigned int temp = side[i];
+                side[i] = side[j];
+                side[j] = temp;
+            };
+        };
     };
 
-    int quel = 1;
+    bool quel = true;
 
-    if(isRectangle(orderedSide)) {
+    if(isRectangle(side)) {
         printf("it's renctangle\n");
-        quel = 0;
+        quel = false;
     };
-    if(orderedSide[0] == orderedSide[1] || orderedSide[1] == orderedSide[2]) {
+    if(side[0] == side[1] || side[1] == side[2]) {
         printf("isocèle\n");
-        quel = 0;
+        quel = false;
     };
-    if(orderedSide[0] == orderedSide[1] && orderedSide[1] == orderedSide[2]) {
+    if(side[0] == side[1] && side[1] == side[2]) {
         printf("équilatéral\n");
-        quel = 0;
+        quel = false;
     };
 
     if(quel) {
-        printf("quelconque");
+        printf("quelconque\n");
     };
 
     return EXIT_SUCCESS;

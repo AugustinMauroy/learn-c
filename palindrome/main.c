@@ -1,13 +1,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
-int estPalindrome(char *mot) {
-    int stringLenght = strlen(mot);
-    for (short unsigned int i = 0; i < stringLenght; i++) {
-        if(mot[i] != mot[stringLenght - i]) return 0;
+bool isPalindrome(char* mot) {
+    unsigned int stringLength = strlen(mot);
+
+    for (int i = 0; i < stringLength / 2; i++) {
+        if (mot[i] != mot[stringLength - i - 1]) return false;
     }
-    return 1;
+
+    return true;
 }
 
 int main(void) {
@@ -16,7 +19,7 @@ int main(void) {
     printf("Entrez une chaîne de caractères : ");
     scanf("%s", mot);
 
-    if (estPalindrome(mot)) {
+    if (isPalindrome(mot)) {
         printf("%s est un palindrome.\n", mot);
     } else {
         printf("%s n'est pas un palindrome.\n", mot);
