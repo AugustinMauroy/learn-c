@@ -2,8 +2,10 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdbool.h>
+#include <unistd.h>
 
-#define MAX 10
+#define MAX 15
+#define DELAY 200000 // 200ms delay
 
 bool inArray(int arr[], int n) {
     for(int i = 0; i < MAX; i++) {
@@ -22,8 +24,22 @@ void displayArray(int arr[]) {
   printf("}\n");
 };
 
+void displayBars(int arr[], int selected) {
+    for(int i = 0; i < MAX; i++) {
+        if(i == selected) {
+            printf("\033[0;31m");
+        } else {
+            printf("\033[0;32m");
+        }
+        for(int j = 0; j < arr[i]; j++) {
+            printf("#");
+        }
+        printf("\033[0m %d\n", arr[i]);
+    }
+}
+
 int main(void) {
-    int arr[MAX], permutations;
+    int arr[MAX], arrCopy[MAX], permutations;
     char user_input;
 
     srand(time(NULL));
@@ -45,26 +61,30 @@ int main(void) {
                 n = i%2 == 0 ? rand() % 30 : rand() % 29;
             } while(inArray(arr, n));
             arr[i] = n;
+            arrCopy[i] = n;
         }
     }
 
-
-    printf("Not sorted array = ");
-    displayArray(arr);
-
     // bubble Sorting
-    for (int i = 0; permutations > 0; i++) {
-        permutations= 0;
+    for (int i = 0; i < MAX - 1; i++) {
+        permutations = 0;
         for (int j = 0; j < MAX - i - 1; j++) {
             if (arr[j] > arr[j + 1]) {
                 int temp = arr[j];
                 arr[j] = arr[j + 1];
                 arr[j + 1] = temp;
                 permutations++;
+                system("clear");
+                displayBars(arr, j);
+                usleep(DELAY);
             }
         }
     }
 
+    system("clear");
+    printf("Not sorted array = ");
+    displayArray(arrCopy);
+    displayBars(arr, -1);
     printf("Sorted array = ");
     displayArray(arr);
     

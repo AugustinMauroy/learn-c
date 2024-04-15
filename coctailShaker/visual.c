@@ -2,8 +2,10 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #define MAX 10
+#define DELAY 200000 // 200ms delay
 
 bool inArray(int arr[], int n) {
     for(int i = 0; i < MAX; i++) {
@@ -12,18 +14,32 @@ bool inArray(int arr[], int n) {
         }
     }
     return false;
-}
+};
 
 void displayArray(int arr[]) {
-    printf("{");
-    for (int i = 0; i < MAX; i++){ 
-        printf("\033[0;32m%d\033[0m%s", arr[i], (i == MAX -1) ? "" : ", ");
+  printf("{");
+  for (int i = 0; i < MAX; i++){ 
+    printf("\033[0;32m%d\033[0m%s", arr[i], (i == MAX -1) ? "" : ", ");
+  }
+  printf("}\n");
+};
+
+void displayBars(int arr[], int selected) {
+    for(int i = 0; i < MAX; i++) {
+        if(i == selected) {
+            printf("\033[0;31m");
+        } else {
+            printf("\033[0;32m");
+        }
+        for(int j = 0; j < arr[i]; j++) {
+            printf("#");
+        }
+        printf("\033[0m %d\n", arr[i]);
     }
-    printf("}\n");
 }
 
 int main(void) {
-    int arr[MAX], permutations;
+    int arr[MAX], arrCopy[MAX];
     char user_input;
 
     srand(time(NULL));
@@ -45,11 +61,9 @@ int main(void) {
                 n = i%2 == 0 ? rand() % 30 : rand() % 29;
             } while(inArray(arr, n));
             arr[i] = n;
+            arrCopy[i] = n;
         }
     }
-
-    printf("Not sorted array = ");
-    displayArray(arr);
 
     bool sorted = false;
     int start = 0;
@@ -58,11 +72,14 @@ int main(void) {
     while (!sorted) {
         sorted = true;
         for (int i = start; i < end; i++) {
-            if (arr[i] < arr[i + 1]) {
+            if (arr[i] > arr[i + 1]) {
                 int temp = arr[i];
                 arr[i] = arr[i + 1];
                 arr[i + 1] = temp;
                 sorted = false;
+                system("clear");
+                displayBars(arr, i);
+                usleep(DELAY);
             }
         }
         if (sorted) break;
@@ -70,19 +87,26 @@ int main(void) {
         end--; 
 
         for (int i = end - 1; i >= start; i--) {
-            if (arr[i] < arr[i + 1]) {
+            if (arr[i] > arr[i + 1]) {
                 int temp = arr[i];
                 arr[i] = arr[i + 1];
                 arr[i + 1] = temp;
                 sorted = false;
+                system("clear");
+                displayBars(arr, i);
+                usleep(DELAY);
             }
         }
 
         start++;
     }
 
-    printf("Sorted array in descending order = ");
+    system("clear");
+    printf("Not sorted array = ");
+    displayArray(arrCopy);
+    displayBars(arr, -1);
+    printf("Sorted array = ");
     displayArray(arr);
     
     return EXIT_SUCCESS;
-}
+};

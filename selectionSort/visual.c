@@ -1,9 +1,11 @@
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <time.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #define MAX 10
+#define DELAY 200000 // 200ms delay
 
 bool inArray(int arr[], int n) {
     for(int i = 0; i < MAX; i++) {
@@ -22,11 +24,25 @@ void displayArray(int arr[]) {
   printf("}\n");
 };
 
-int main(void) {
-    int arr[MAX], permutations;
-    char user_input;
+void displayBars(int arr[], int selected) {
+    for(int i = 0; i < MAX; i++) {
+        if(i == selected) {
+            printf("\033[0;31m");
+        } else {
+            printf("\033[0;32m");
+        }
+        for(int j = 0; j < arr[i]; j++) {
+            printf("#");
+        }
+        printf("\033[0m %d\n", arr[i]);
+    }
+}
 
-    srand(time(NULL));
+int main(void) {
+  int arr[MAX], arrCopy[MAX];
+  char user_input;
+
+  srand(time(NULL));
 
     do {
         printf("Do you want to input your number? (y/n): ");
@@ -45,29 +61,37 @@ int main(void) {
                 n = i%2 == 0 ? rand() % 30 : rand() % 29;
             } while(inArray(arr, n));
             arr[i] = n;
+            arrCopy[i] = n;
         }
     }
 
 
-    printf("Not sorted array = ");
-    displayArray(arr);
 
-    // bubble Sorting
-    for (int i = 0; permutations > 0; i++) {
-        permutations= 0;
-        for (int j = 0; j < MAX - i - 1; j++) {
-            if (arr[j] > arr[j + 1]) {
-                int temp = arr[j];
-                arr[j] = arr[j + 1];
-                arr[j + 1] = temp;
-                permutations++;
+    // Selection sort
+    for(int i = 0; i<MAX-1; i++) {
+        //now search minmun
+        int posmin = i;
+        for(int j = i; j<MAX; j++){
+            if(arr[j] < arr[posmin]){
+                posmin = j;
             }
         }
+        // swap
+        int temp = arr[posmin];
+        arr[posmin] = arr[i];
+        arr[i] = temp;
+        system("clear");
+        displayBars(arr, i);
+        usleep(DELAY);
     }
 
+    system("clear");
+    printf("Not sorted array = ");
+    displayArray(arrCopy);
+    displayBars(arr, -1);
     printf("Sorted array = ");
     displayArray(arr);
-    
+
     return EXIT_SUCCESS;
-};
+}
 

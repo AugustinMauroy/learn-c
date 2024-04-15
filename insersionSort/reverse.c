@@ -40,7 +40,7 @@ int main(void) {
         for(int i = 0; i < MAX; i++) {
             int n;
             do {
-                n = rand() % 15;
+                n = i%2 == 0 ? rand() % 30 : rand() % 29;
             } while(inArray(arr, n));
             arr[i] = n;
         }
