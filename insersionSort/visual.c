@@ -4,8 +4,8 @@
 #include <stdbool.h>
 #include <unistd.h>
 
-#define MAX 10
-#define DELAY 200000 // 200ms delay
+#define MAX 20
+#define DELAY 100000 // 0.1s 
 
 bool inArray(int arr[], int n) {
     for(int i = 0; i < MAX; i++) {
@@ -13,6 +13,14 @@ bool inArray(int arr[], int n) {
     }
     return false;
 };
+
+void toggleCursor(int show) {
+    if (show) {
+        printf("\e[?25h");
+    } else {
+        printf("\e[?25l");
+    }
+}
 
 void displayArray(int arr[]) {
     printf("{");
@@ -23,6 +31,8 @@ void displayArray(int arr[]) {
 };
 
 void displayBars(int arr[], int selected) {
+    system("clear");
+    toggleCursor(0);
     for(int i = 0; i < MAX; i++) {
         if(i == selected) {
             printf("\033[0;31m");
@@ -30,10 +40,11 @@ void displayBars(int arr[], int selected) {
             printf("\033[0;32m");
         }
         for(int j = 0; j < arr[i]; j++) {
-            printf("#");
+            printf("█");
         }
         printf("\033[0m %d\n", arr[i]);
     }
+    toggleCursor(1);
 }
 
 int main(void) {
@@ -71,13 +82,11 @@ int main(void) {
             arr[j] = arr[j - 1];
             arr[j - 1] = temp;
             j--;
-            system("clear");
             displayBars(arr, j);
             usleep(DELAY);
         }
     }
 
-    system("clear");
     printf("Not sorted array = ");
     displayArray(arrCopy);
     displayBars(arr, -1);

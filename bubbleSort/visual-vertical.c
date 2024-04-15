@@ -32,22 +32,41 @@ void displayArray(int arr[]) {
   printf("}\n");
 };
 
-void displayBars(int arr[], int selected) {
+void displayBarsVertically(int arr[], int selected) {
     toggleCursor(0);
     system("clear");
-    for(int i = 0; i < MAX; i++) {
-        if(i == selected) {
-            printf("\033[0;31m");
-        } else {
-            printf("\033[0;32m");
+
+    // Find the maximum value in the array
+    int maxValue = arr[0];
+    for (int i = 1; i < MAX; i++) {
+        if (arr[i] > maxValue) {
+            maxValue = arr[i];
         }
-        for(int j = 0; j < arr[i]; j++) {
-            printf("█");
-        }
-        printf("\033[0m %d\n", arr[i]);
     }
+
+    // Print each row of the bars
+    for (int j = 0; j < maxValue; j++) {
+        for (int i = 0; i < MAX; i++) {
+            if (j > arr[i]) {
+                if (i == selected) {
+                    printf("\033[0;31m");
+                } else {
+                    printf("\033[0;32m");
+                }
+                printf("█"); // draw the bar
+            } else {
+                printf(" "); // space to fill the gap bettwent top
+            }
+            printf(" "); // space bettwen bars
+        } 
+        printf("\n");
+    }
+
+    printf("\033[0m\n");
     toggleCursor(1);
 }
+
+
 
 int main(void) {
     int arr[MAX], arrCopy[MAX], permutations;
@@ -85,15 +104,13 @@ int main(void) {
                 arr[j] = arr[j + 1];
                 arr[j + 1] = temp;
                 permutations++;
-                displayBars(arr, j);
+                displayBarsVertically(arr, j);
                 usleep(DELAY);
             }
         }
     }
 
-    printf("Not sorted array = ");
-    displayArray(arrCopy);
-    displayBars(arr, -1);
+    displayBarsVertically(arr, -1);
     printf("Sorted array = ");
     displayArray(arr);
     

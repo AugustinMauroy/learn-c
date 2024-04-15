@@ -1,5 +1,5 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #include <stdbool.h>
 #include <unistd.h>
@@ -33,8 +33,8 @@ void displayArray(int arr[]) {
 };
 
 void displayBars(int arr[], int selected) {
-    system("clear");
     toggleCursor(0);
+    system("clear");
     for(int i = 0; i < MAX; i++) {
         if(i == selected) {
             printf("\033[0;31m");
@@ -50,10 +50,10 @@ void displayBars(int arr[], int selected) {
 }
 
 int main(void) {
-  int arr[MAX], arrCopy[MAX];
-  char user_input;
+    int arr[MAX], arrCopy[MAX], permutations;
+    char user_input;
 
-  srand(time(NULL));
+    srand(time(NULL));
 
     do {
         printf("Do you want to input your number? (y/n): ");
@@ -76,23 +76,24 @@ int main(void) {
         }
     }
 
+    int gap = MAX;
+    bool swapped = 1;
+    int i, j, temp;
 
-
-    // Selection sort
-    for(int i = 0; i<MAX-1; i++) {
-        //now search minmun
-        int posmin = i;
-        for(int j = i; j<MAX; j++){
-            if(arr[j] < arr[posmin]){
-                posmin = j;
+    while (gap > 1 || swapped == 1) {
+        gap = (gap * 10) / 13;
+        if (gap == 9 || gap == 10) gap = 11;
+        swapped = false;
+        for (i = 0; i + gap < MAX; i++) {
+            if (arr[i] > arr[i + gap]) {
+                temp = arr[i];
+                arr[i] = arr[i + gap];
+                arr[i + gap] = temp;
+                swapped = true;
+                displayBars(arr, i);
+                usleep(DELAY);
             }
         }
-        // swap
-        int temp = arr[posmin];
-        arr[posmin] = arr[i];
-        arr[i] = temp;
-        displayBars(arr, i);
-        usleep(DELAY);
     }
 
     printf("Not sorted array = ");
@@ -100,7 +101,7 @@ int main(void) {
     displayBars(arr, -1);
     printf("Sorted array = ");
     displayArray(arr);
-
+    
     return EXIT_SUCCESS;
-}
+};
 
