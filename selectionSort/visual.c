@@ -25,19 +25,21 @@ void toggleCursor(int show) {
 }
 
 void displayArray(int arr[]) {
-  printf("{");
-  for (int i = 0; i < MAX; i++){ 
+    printf("{");
+    for (int i = 0; i < MAX; i++){ 
     printf("\033[0;32m%d\033[0m%s", arr[i], (i == MAX -1) ? "" : ", ");
-  }
-  printf("}\n");
+    }
+    printf("}\n");
 };
 
-void displayBars(int arr[], int selected) {
+void displayBars(int arr[], int selected, int selected2) {
     system("clear");
     toggleCursor(0);
     for(int i = 0; i < MAX; i++) {
         if(i == selected) {
             printf("\033[0;31m");
+        } else if(i == selected2) {
+            printf("\033[0;33m");
         } else {
             printf("\033[0;32m");
         }
@@ -50,10 +52,10 @@ void displayBars(int arr[], int selected) {
 }
 
 int main(void) {
-  int arr[MAX], arrCopy[MAX];
-  char user_input;
+    int arr[MAX], arrCopy[MAX];
+    char user_input;
 
-  srand(time(NULL));
+    srand(time(NULL));
 
     do {
         printf("Do you want to input your number? (y/n): ");
@@ -91,13 +93,13 @@ int main(void) {
         int temp = arr[posmin];
         arr[posmin] = arr[i];
         arr[i] = temp;
-        displayBars(arr, i);
+        displayBars(arr, i, posmin);
         usleep(DELAY);
     }
 
     printf("Not sorted array = ");
     displayArray(arrCopy);
-    displayBars(arr, -1);
+    displayBars(arr, -1, -1);
     printf("Sorted array = ");
     displayArray(arr);
 
