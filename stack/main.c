@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #define MAX_INPUT_SIZE 100
 #define STACK_SIZE 10
@@ -16,6 +17,7 @@ int s2i(char *s) {
 
 void displayStackChar(char *input[STACK_SIZE]) {
     for (int i = 0; i < STACK_SIZE; i++) {
+        if(input[i] == NULL) break;
         if(input[i][0] >= '0' && input[i][0] <= '9') {
             printf("\033[0;32m%s\033[0m ", input[i]);
         } else {
@@ -26,17 +28,35 @@ void displayStackChar(char *input[STACK_SIZE]) {
 }
 
 int main(void) {
-    char *input[STACK_SIZE] = {"42","2","+"};
+    char *input[MAX_INPUT_SIZE];
     int stack[STACK_SIZE];
 
-    //printf("Enter a postfix expression: ");
-    // TODO: read user input
+    // Explain how to use the program
+    printf("This program is a simple calculator that can perform addition, subtraction, multiplication, and division.\n");
+    printf("The program will ask you to enter an expression in the form of a space-separated list of numbers and operators.\n");
+    printf("For example, to calculate 2 + 3, you should enter: 2 + 3\n");
+    printf("The program will then display the result of the expression.\n");
+    printf("\nEnter an expression: ");
+    char buffer[MAX_INPUT_SIZE];
+    fgets(buffer, MAX_INPUT_SIZE, stdin);
+    char *token = strtok(buffer, " ");
+    int i = 0;
+    while(token != NULL) {
+        input[i] = token;
+        token = strtok(NULL, " ");
+        i++;
+    }
+    for (int j = i; j < MAX_INPUT_SIZE; j++) {
+        input[j] = NULL;
+    }
+
 
     displayStackChar(input);
 
     int result = 0;
     int top = 0;
-    for (int i = 0; i < STACK_SIZE; i++) {
+    for (int i = 0; i < MAX_INPUT_SIZE; i++) {
+        if(input[i] == NULL) break;
         // if not operator, push to stack
         if(input[i][0] >= '0' && input[i][0] <= '9') {
             stack[top] = s2i(input[i]);
@@ -68,7 +88,11 @@ int main(void) {
         }
     }
 
-    printf("Result: %d\n", result);
-    
+    if(top != 1) {
+        printf("Invalid expression\n");
+        return EXIT_FAILURE;
+    }
+
+    printf("Result: %d\n", stack[0]);
     return EXIT_SUCCESS;
 };
