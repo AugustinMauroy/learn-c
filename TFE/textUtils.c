@@ -26,13 +26,13 @@ enum {
     BG_WHITE = 47
 };
 
-char *styleText(char *text, int style){
-    char *styleString = (char *)malloc(100);
-    sprintf(styleString, "\033[%dm%s\033[0m", style, text);
-    return styleString;
+char *style_text(char *text, int style) {
+    char *buffer = malloc(1000);
+    sprintf(buffer, "\033[%dm%s\033[0m", style, text);
+    return buffer;
 }
 
-void displayTitle(void){
+void display_title(void){
     printf("$$\\      $$\\                     $$\\           $$$$$$$\\  $$$$$$$\\  \n");
     printf("$$$\\    $$$ |                    \\__|          $$  __$$\\ $$  __$$\\ \n");
     printf("$$$$\\  $$$$ | $$$$$$\\ $$\\    $$\\ $$\\  $$$$$$\\  $$ |  $$ |$$ |  $$ |\n");
@@ -43,8 +43,15 @@ void displayTitle(void){
     printf("\\__|     \\__| \\______/    \\_/    \\__| \\_______|\\_______/ \\_______/ \n");
 }
 
-void description(void){
+void display_description(void){
     printf("This program is a simple movie database that allows you to add, remove, and display movies.\n");
     printf("You can also add, remove, and display genres.\n");
     printf("The program will also allow you to search for movies by genre.\n");
+}
+
+void exit_program(void){
+    system("clear");
+    printf("Goodbye!\n");
+    printf("Made by: %s\n", style_text("Augustin Mauroy", GREEN));
+    exit(EXIT_SUCCESS);
 }
