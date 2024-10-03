@@ -7,7 +7,6 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <string.h>
-#include "./colors.h"
 
 struct vec2 {
     int x;
@@ -179,27 +178,4 @@ void print_table(char *headers[], int num_headers, char *rows[], int num_rows) {
     printf("+\n");
 
     free(max_widths);
-}
-
-int main(void) {
-    char *choices[] = {"Option 1", "Option 2", "Option 3"};
-
-    printf("%s\n", style_text("Welcome to the UI demo!", BOLD));
-    printf("%s\n", style_text("Please press any key to continue...", ITALIC));
-    getchar();
-
-    clear_screen();
-    int selected = multiple_choice(choices, 3, true);
-
-    centered_text("You selected: %s\n", choices[selected]);
-
-    char *headers[] = {"Name", "Age"};
-    char *rows[] = {
-        "John", "25",
-        "Jane", "22",
-        "Doe", "30"
-    };
-    print_table(headers, 2, rows, 3);
-
-    return EXIT_SUCCESS;
 }
