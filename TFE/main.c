@@ -4,52 +4,60 @@
 #include "./textUtils.c"
 #include "./gui.c"
 
-struct movieTable{
+#define MAX_TABLE_SIZE 1000
+
+struct movie{
     int id;
     char name[50];
     int genreId;
     // Duration is in minutes
     int duration;
 };
+typedef struct movie movie;
+
+struct movieTable{
+    movie movies[MAX_TABLE_SIZE];
+};
 typedef struct movieTable movieTable;
 
-struct genreTable{
+struct genre{
     int id;
     char name[50];
 };
+typedef struct genre genre;
+
+struct genreTable{
+    genre genres[MAX_TABLE_SIZE];
+};
 typedef struct genreTable genreTable;
 
-genreTable loadGenreTable(void){
-    // search for a binary file
-    FILE *file = fopen("genreTable.bin", "rb");
-    if (file == NULL){
-        // if the file does not exist, create it
-        file = fopen("genreTable.bin", "wb");
-        genreTable newTable = {0, "none"};
-        fwrite(&newTable, sizeof(genreTable), 1, file);
+movieTable loadMovieTable(void){
+    movieTable table;
+    FILE *file = fopen("movieTable.bin", "rb");
+    if (file) {
+        fread(&table, sizeof(movieTable), 1, file);
         fclose(file);
-        file = fopen("genreTable.bin", "rb");
+    } else {
+        // create an empty movie table
+        table.movies[0].id = 0;
+        strcpy(table.movies[0].name, "none");
+        table.movies[0].genreId = 0;
+        table.movies[0].duration = 0;
     }
-    genreTable table;
-    fread(&table, sizeof(genreTable), 1, file);
-    fclose(file);
     return table;
 }
 
-movieTable loadMovieTable(void){
-    // search for a binary file
-    FILE *file = fopen("movieTable.bin", "rb");
-    if (file == NULL){
-        // if the file does not exist, create it
-        file = fopen("movieTable.bin", "wb");
-        movieTable newTable = {0, "Default Movie", 0, 0};
-        fwrite(&newTable, sizeof(movieTable), 1, file);
+genreTable loadGenreTable(void){
+    genreTable table;
+    FILE *file = fopen("genreTable.bin", "rb");
+    if (file) {
+        fread(&table, sizeof(genreTable), 1, file);
         fclose(file);
-        file = fopen("movieTable.bin", "rb");
+    } else {
+        // create an empty genre table
+        table.genres[0].id = 0;
+        strcpy(table.genres[0].name, "none");
     }
-    movieTable table;
-    fread(&table, sizeof(movieTable), 1, file);
-    fclose(file);
     return table;
 }
 
@@ -65,26 +73,10 @@ void saveGenreTable(genreTable table){
     fclose(file);
 }
 
-void addGenre(genreTable *table){
-    // id is unique and auto-incremented
-    // name is unique
-    char name[50];
-    printf("Enter the name of the genre: ");
-    fgets(name, 50, stdin);
-    // -> is the same as (*table).id
-    table->id++;
-    strcpy(table->name, name);
-}
-
-void displayGenres(genreTable table){
-    printf("ID: %d\n", table.id);
-    printf("Name: %s\n", table.name);
-}
-
 int main(void) {
     display_title();
     display_description();
-    movieTable table = loadMovieTable();
+    movieTable movieTable = loadMovieTable();
     genreTable genreTable = loadGenreTable();
 
     char *answers[] = {"Add Movie", "Remove Movie", "Display Movies", "Add Genre", "Remove Genre", "Display Genres", "Search Movies by Genre", "Exit"};
@@ -102,19 +94,19 @@ int main(void) {
             printf("Display Movies\n");
             break;
         case 3:
-            addGenre(&genreTable);
+            printf("Add Genre\n");
             break;
         case 4:
             printf("Remove Genre\n");
             break;
         case 5:
-            displayGenres(genreTable);
+            printf("Display Genres\n");
             break;
         case 6:
             printf("Search Movies by Genre\n");
             break;
         case 7:
-            saveMovieTable(table);
+            saveMovieTable(movieTable);
             saveGenreTable(genreTable);
             exit_program();
             break;
