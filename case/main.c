@@ -14,7 +14,7 @@ char to_lower(char c) {
     return c;
 }
 
-int main() {
+int main(void) {
     char sentence[80], temp;
     int modified[80];
     printf("Enter a sentence: ");

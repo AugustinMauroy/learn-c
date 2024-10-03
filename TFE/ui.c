@@ -1,4 +1,3 @@
-// clang main.c -O3 && ./a.out
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -26,7 +25,7 @@ void toggle_canonical(bool show) {
     system(show ? "stty icanon" : "stty -icanon");
 }
 
-void clear_screen() {
+void clear_screen(void) {
     system("clear");
 }
 
@@ -36,7 +35,7 @@ char *style_text(char *text, int style) {
     return buffer;
 }
 
-vec2 get_cursor_position() {
+vec2 get_cursor_position(void) {
     printf("\033[6n");
     int x, y;
     scanf("\033[%d;%dR", &y, &x);
@@ -51,7 +50,7 @@ void set_cursor_position_relative(vec2 pos) {
     printf("\033[%d;%dH", pos.y, pos.x);
 }
 
-int screen_width() {
+int screen_width(void) {
     struct winsize w;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
     return w.ws_col;
@@ -147,7 +146,7 @@ void print_table(char *headers[], int num_headers, char *rows[], int num_rows) {
     printf("+\n");
 
     for (int i = 0; i < num_headers; i++) {
-        printf("| %-*s ", max_widths[i], style_text(headers[i], BOLD));
+        printf("| %-*s ", max_widths[i], headers[i]);
     }
     printf("|\n");
 
