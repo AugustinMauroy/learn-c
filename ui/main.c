@@ -1,19 +1,19 @@
+// clang main.c -O3 && ./a.out
 #include <stdlib.h>
 #include <stdbool.h>
-#include <string.h>
 #include <stdio.h>
+#include <sys/ioctl.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdarg.h>
+#include <string.h>
+#include "./colors.h"
 
 struct vec2 {
     int x;
     int y;
 };
 typedef struct vec2 vec2;
-struct vec3 {
-    int x;
-    int y;
-    int z;
-};
-typedef struct vec3 vec3;
 
 void toggle_cursor(bool show) {
     printf("\033[?25%c", show ? 'h' : 'l');
@@ -31,6 +31,12 @@ void clear_screen() {
     system("clear");
 }
 
+char *style_text(char *text, int style) {
+    char *buffer = malloc(1000);
+    sprintf(buffer, "\033[%dm%s\033[0m", style, text);
+    return buffer;
+}
+
 vec2 get_cursor_position() {
     printf("\033[6n");
     int x, y;
@@ -44,6 +50,25 @@ void set_cursor_position(vec2 pos) {
 
 void set_cursor_position_relative(vec2 pos) {
     printf("\033[%d;%dH", pos.y, pos.x);
+}
+
+int screen_width() {
+    struct winsize w;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+    return w.ws_col;
+}
+
+void centered_text(const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+
+    int width = screen_width();
+    int len = vsnprintf(NULL, 0, format, args);
+    int start = (width - len) / 2;
+    printf("\033[%dG", start);
+    vprintf(format, args);
+
+    va_end(args);
 }
 
 int multiple_choice(char *choices[], int num_choices, bool keep_after) {
@@ -98,14 +123,83 @@ int multiple_choice(char *choices[], int num_choices, bool keep_after) {
     return selected;
 }
 
+void print_table(char *headers[], int num_headers, char *rows[], int num_rows) {
+    int *max_widths = (int *)malloc(num_headers * sizeof(int));
+    for (int i = 0; i < num_headers; i++) {
+        max_widths[i] = strlen(headers[i]);
+    }
+
+    for (int i = 0; i < num_rows; i++) {
+        for (int j = 0; j < num_headers; j++) {
+            int len = strlen(rows[i * num_headers + j]);
+            if (len > max_widths[j]) {
+                max_widths[j] = len;
+            }
+        }
+    }
+
+    // Print top border
+    for (int i = 0; i < num_headers; i++) {
+        printf("+");
+        for (int j = 0; j < max_widths[i] + 2; j++) {
+            printf("-");
+        }
+    }
+    printf("+\n");
+
+    for (int i = 0; i < num_headers; i++) {
+        printf("| %-*s ", max_widths[i], style_text(headers[i], BOLD));
+    }
+    printf("|\n");
+
+    // Print middle border
+    for (int i = 0; i < num_headers; i++) {
+        printf("+");
+        for (int j = 0; j < max_widths[i] + 2; j++) {
+            printf("-");
+        }
+    }
+    printf("+\n");
+
+    // Print rows
+    for (int i = 0; i < num_rows; i++) {
+        for (int j = 0; j < num_headers; j++) {
+            printf("| %-*s ", max_widths[j], rows[i * num_headers + j]);
+        }
+        printf("|\n");
+    }
+
+    // Print bottom border
+    for (int i = 0; i < num_headers; i++) {
+        printf("+");
+        for (int j = 0; j < max_widths[i] + 2; j++) {
+            printf("-");
+        }
+    }
+    printf("+\n");
+
+    free(max_widths);
+}
 
 int main(void) {
     char *choices[] = {"Option 1", "Option 2", "Option 3"};
-    
+
+    printf("%s\n", style_text("Welcome to the UI demo!", BOLD));
+    printf("%s\n", style_text("Please press any key to continue...", ITALIC));
+    getchar();
+
     clear_screen();
     int selected = multiple_choice(choices, 3, true);
 
-    printf("Selected: %s\n", choices[selected]);
+    centered_text("You selected: %s\n", choices[selected]);
+
+    char *headers[] = {"Name", "Age"};
+    char *rows[] = {
+        "John", "25",
+        "Jane", "22",
+        "Doe", "30"
+    };
+    print_table(headers, 2, rows, 3);
 
     return EXIT_SUCCESS;
 }
