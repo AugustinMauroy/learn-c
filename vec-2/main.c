@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 struct vec2 {
     float x;
@@ -31,10 +32,13 @@ void displayVec2(vec2 v, char* name) {
     printf("};\n");
 }
 
+float distance(vec2 a, vec2 b) {
+    return sqrt(pow(b.x - a.x, 2) + pow(b.y - a.y, 2));
+}
 
 int main(void) {
-    vec2 a = {1.0f, 2.0f};
-    vec2 b = {3.0f, 4.0f};
+    vec2 a = {1.0, 2.0};
+    vec2 b = {3.0, 4.0};
 
     vec2 c = add(a, b);
     vec2 d = mul(a, b);
@@ -43,6 +47,8 @@ int main(void) {
     displayVec2(b, "b");
     displayVec2(c, "a+b");
     displayVec2(d, "a*b");
+
+    printf("Distance between a and b: %d\n", distance(a, b));
 
     return EXIT_SUCCESS;
 }
