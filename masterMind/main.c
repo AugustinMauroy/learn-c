@@ -4,7 +4,6 @@
 #include <ctype.h>
 #include <stdbool.h>
 
-#define MAX_TRIES 10
 #define IS_CHEAT_MODE 1
 
 void flushInputBuffer(void) {
@@ -60,7 +59,7 @@ int main(void) {
     char *colors[4] = {"\033[0;31m", "\033[0;32m", "\033[0;33m", "\033[0;34m"}; // red, green, yellow, blue
     char *resetColors = "\033[0m";
     int balls[4];
-    unsigned int tries;
+    unsigned int max_tries, tries;
     int rightPlace = 0, rightColor = 0;
 
     srand(time(NULL));
@@ -74,6 +73,10 @@ int main(void) {
     printf("To play the game, simply enter R for red, G for green, Y for yellow and B for blue.\n");
     printf("Have Fun !!!\n");
 
+    printf("Enter the maximum number of tries: ");
+    scanf("%d", &max_tries);
+    flushInputBuffer();
+
     // cheat mode
     if (IS_CHEAT_MODE) {
         printf("Cheat mode: ");
@@ -84,7 +87,7 @@ int main(void) {
     }
 
     // game loop
-    for (tries = 0; tries < MAX_TRIES; tries++) {
+    for (tries = 0; tries < max_tries; tries++) {
         int input[4];
         fillArray(input, -1, 4);
         for (int i = 0; i < 4; i++) {
@@ -137,7 +140,7 @@ int main(void) {
         }
     };
 
-    if (tries == MAX_TRIES) {
+    if (tries == max_tries) {
         printf("You lost, the solution was: ");
     };
 
