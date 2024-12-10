@@ -1,12 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
 
 #define INPUT1 "input-1.txt"
 #define INPUT2 "input-2.txt"
 #define OUTPUT "output.txt"
 #define MAX_LINE 200
+#define VPL_MOODLE 1
 
 /*
         1. Lire une ligne de l'entrée 1
@@ -41,46 +41,33 @@ int main(void){
     }
 
     char linefile1[MAX_LINE], linefile2[MAX_LINE];
-    bool endOfFile1 = false, endOfFile2 = false;
 
     // Lire la première ligne de chaque fichier pour lancé le programme
     fgets(linefile1, MAX_LINE, input1);
     fgets(linefile2, MAX_LINE, input2);
 
-    while(!endOfFile1 || !endOfFile2) {
-        if(endOfFile1) {
-            while(fgets(linefile2, MAX_LINE, input2) != NULL) {
-                fputs(linefile2, output);
-            }
-            break;
-        }
-        if(endOfFile2) {
-            while(fgets(linefile1, MAX_LINE, input1) != NULL) {
-                fputs(linefile1, output);
-            }
-            break;
-        }
-
+    while(!feof(input1) && !feof(input2)){
         int cmp = strcmp(linefile1, linefile2);
 
         if(cmp < 0) {
             fputs(linefile1, output);
-            if(fgets(linefile1, MAX_LINE, input1) == NULL) {
-                endOfFile1 = true;
-            }
+            fgets(linefile1, MAX_LINE, input1);
         } else if(cmp > 0) {
             fputs(linefile2, output);
-            if(fgets(linefile2, MAX_LINE, input2) == NULL) {
-                endOfFile2 = true;
-            }
+            fgets(linefile2, MAX_LINE, input2);
         } else {
             fputs(linefile1, output);
-            if(fgets(linefile1, MAX_LINE, input1) == NULL) {
-                endOfFile1 = true;
-            }
-            if(fgets(linefile2, MAX_LINE, input2) == NULL) {
-                endOfFile2 = true;
-            }
+            fgets(linefile1, MAX_LINE, input1);
+        }
+    }
+
+    if(feof(input1)){
+        while(fgets(linefile2, MAX_LINE, input2) != NULL){
+            fputs(linefile2, output);
+        }
+    } else {
+        while(fgets(linefile1, MAX_LINE, input1) != NULL){
+            fputs(linefile1, output);
         }
     }
 
@@ -92,7 +79,23 @@ int main(void){
         return EXIT_FAILURE;
     }
 
-    printf("Files merged successfully\n");
+    printf("\nFiles merged successfully\n");
+
+    output = fopen(OUTPUT, "r");
+
+    if(output == NULL){
+        perror(OUTPUT);
+        return EXIT_FAILURE;
+    }
+
+    #if VPL_MOODLE
+    printf("%s:", OUTPUT);
+    printf("\n------------------------------------------------\n");
+    while(fgets(linefile1, MAX_LINE, output) != NULL){
+        printf("%s", linefile1);
+    }
+    printf("\n------------------------------------------------\n");
+    #endif
 
     return EXIT_SUCCESS;
 }
