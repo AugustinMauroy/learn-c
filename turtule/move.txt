@@ -1,0 +1,14 @@
+# deplacement de la tortue
+G
+H
+H
+G
+B
+D
+H
+D
+D
+D
+B
+D
+G
