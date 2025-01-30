@@ -13,7 +13,7 @@ typedef struct {
     char *mime;
 } mime_type;
 
-int main(void) {
+int main(int argc, char *argv[]) {
     mime_type data_set[] = {
         {
             // rbxl
@@ -73,7 +73,12 @@ int main(void) {
         }
     };
 
-    FILE *file = fopen("file.docx", "rb");
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s <file>\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    FILE *file = fopen(argv[1], "rb");
 
     if (file == NULL) {
         perror("Error opening file");
@@ -81,12 +86,12 @@ int main(void) {
     }
 
     unsigned char buffer[MAX_SIG_SIZE];
-    fread(buffer, 1, MAX_SIG_SIZE, file);
+    size_t readed = fread(buffer, 1, MAX_SIG_SIZE, file);
     fclose(file);
 
 
     printf("Signature: ");
-    for (int i = 0; i < MAX_SIG_SIZE; i++) {
+    for (int i = 0; i < readed; i++) {
         printf("%02X ", buffer[i]);
     }
     printf("\n");
