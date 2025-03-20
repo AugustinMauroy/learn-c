@@ -27,8 +27,16 @@ typedef struct movie {
     int duration;
 } Movie;
 
+
+typedef struct index {
+    char title[100];
+    int offset;
+} Index;
+
+
 void mock_db(FILE *dbPtr) {
     Movie movies[] = {
+        // classic movies
         {"The Shawshank Redemption", 1994, "Frank Darabont", DRAMA, 142},
         {"The Godfather", 1972, "Francis Ford Coppola", DRAMA, 175},
         {"The Dark Knight", 2008, "Christopher Nolan", ACTION, 152},
@@ -36,6 +44,27 @@ void mock_db(FILE *dbPtr) {
         {"The Lord of the Rings: The Return of the King", 2003, "Peter Jackson", ACTION, 201},
         {"Pulp Fiction", 1994, "Quentin Tarantino", THRILLER, 154},
         {"Schindler's List", 1993, "Steven Spielberg", DRAMA, 195},
+        // all star wars movies
+        {"Star Wars: Episode I - The Phantom Menace", 1999, "George Lucas", ACTION, 136},
+        {"Star Wars: Episode II - Attack of the Clones", 2002, "George Lucas", ACTION, 142},
+        {"Star Wars: Episode III - Revenge of the Sith", 2005, "George Lucas", ACTION, 140},
+        {"Star Wars: Episode IV - A New Hope", 1977, "George Lucas", ACTION, 121},
+        {"Star Wars: Episode V - The Empire Strikes Back", 1980, "Irvin Kershner", ACTION, 124},
+        {"Star Wars: Episode VI - Return of the Jedi", 1983, "Richard Marquand", ACTION, 131},
+        {"Star Wars: Episode VII - The Force Awakens", 2015, "J.J. Abrams", ACTION, 138},
+        {"Star Wars: Episode VIII - The Last Jedi", 2017, "Rian Johnson", ACTION, 152},
+        {"Star Wars: Episode IX - The Rise of Skywalker", 2019, "J.J. Abrams", ACTION, 142},
+        {"Rogue One: A Star Wars Story", 2016, "Gareth Edwards", ACTION, 133},
+        {"Solo: A Star Wars Story", 2018, "Ron Howard", ACTION, 135},
+        // all harry potter movies
+        {"Harry Potter and the Philosopher's Stone", 2001, "Chris Columbus", ACTION, 152},
+        {"Harry Potter and the Chamber of Secrets", 2002, "Chris Columbus", ACTION, 161},
+        {"Harry Potter and the Prisoner of Azkaban", 2004, "Alfonso Cuarón", ACTION, 142},
+        {"Harry Potter and the Goblet of Fire", 2005, "Mike Newell", ACTION, 157},
+        {"Harry Potter and the Order of the Phoenix", 2007, "David Yates", ACTION, 138},
+        {"Harry Potter and the Half-Blood Prince", 2009, "David Yates", ACTION, 153},
+        {"Harry Potter and the Deathly Hallows – Part 1", 2010, "David Yates", ACTION, 146},
+        {"Harry Potter and the Deathly Hallows – Part 2", 2011, "David Yates", ACTION, 130},
     };
 
     for (int i = 0; i < sizeof(movies) / sizeof(Movie); i++) {
@@ -61,6 +90,36 @@ FILE *openFile(const char *filename) {
     }
 
     return file;
+}
+
+void initializate_indexes(FILE *dbPtr, Index *ini_indexes[]) {
+    Movie movie;
+    Index *index;
+    int i = 0;
+
+    fseek(dbPtr, 0, SEEK_SET);
+    while (fread(&movie, sizeof(Movie), 1, dbPtr) == 1) {
+        index = (Index *)malloc(sizeof(Index));
+        strcpy(index->title, movie.title);
+        index->offset = i;
+        ini_indexes[i] = index;
+        i++;
+    }
+}
+
+void display_indexes(Index *indexes[]) {
+    Index *index;
+    for (int i = 0; indexes[i] != NULL; i++) {
+        index = indexes[i];
+        printf("Title: %s\n", index->title);
+        printf("Offset: %d\n", index->offset);
+    }
+}
+
+void release_indexes(Index *index[]) {
+    for (int i = 0; index[i] != NULL; i++) {
+        free(index[i]);
+    }
 }
 
 void add_movie(FILE *dbPtr) {
@@ -102,6 +161,7 @@ void list_movies(FILE *dbPtr) {
 
     fseek(dbPtr, 0, SEEK_SET);
     // @todo(@AugustinMauroy): add a way/function to display movies in a "table" format
+    // also investigate for a pagination system to make it digestible
     while (fread(&movie, sizeof(Movie), 1, dbPtr) == 1) {
         // hacky way to know when it's the first movie
         if (!hasMovies) printf("--------------------\n");
@@ -120,7 +180,10 @@ void list_movies(FILE *dbPtr) {
     getchar();
 }
 
-void drop_database(FILE *dbPtr) {
+void drop_database(FILE *dbPtr, Index *indexes[]) {
+    for (int i = 0; indexes[i] != NULL; i++) {
+        free(indexes[i]);
+    }
     fclose(dbPtr);
     remove("movies.db");
     // re-initialize the db
@@ -139,6 +202,10 @@ int main(void) {
         printf("Error: Unable to open file\n");
         return EXIT_FAILURE;
     }
+
+    Index *indexes[100];
+    initializate_indexes(dbPtr, indexes);
+    display_indexes(indexes);
 
     while (appRunning) {
         char *choices[] = {
@@ -172,7 +239,7 @@ int main(void) {
                 not_impl("Delete movie");
                 break;
             case 4:
-                drop_database(dbPtr);
+                drop_database(dbPtr, indexes);
                 break;
             case 5:
             default:
@@ -182,6 +249,7 @@ int main(void) {
     }
 
     fclose(dbPtr);
+    release_indexes(indexes);
 
     return EXIT_SUCCESS;
 }
