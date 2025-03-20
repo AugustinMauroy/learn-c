@@ -34,6 +34,7 @@ int main(void) {
                 p.x++;
                 break;
             default:
+								printf("Invalid move: %c\n", line[0]);
                 break;
         }
     }
@@ -45,3 +46,4 @@ int main(void) {
 
     return EXIT_SUCCESS;
 }
+

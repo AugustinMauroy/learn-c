@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
     }
 
     unsigned char buffer[MAX_SIG_SIZE];
-    size_t readed = fread(buffer, 1, MAX_SIG_SIZE, file);
+    size_t readed = fread(buffer, MAX_SIG_SIZE, 1 , file);
     fclose(file);
 
 
