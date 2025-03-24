@@ -1,9 +1,3 @@
-/**
- * remaining workarounds:
- * - create an index (in memory)
- *   - de-block search
- *   - de-block delete
- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -188,7 +182,69 @@ void drop_database(FILE *dbPtr, Index *indexes[]) {
     remove("movies.db");
     // re-initialize the db
     dbPtr = openFile("movies.db");
+    // re-initialize indexes
+    initializate_indexes(dbPtr, indexes);
     printf("Database dropped successfully!\n");
+    printf("Press any key to return to the main menu\n");
+    getchar();
+}
+
+void delete_movie(FILE *dbPtr, Index *indexes[]) {
+    char title[100];
+    unsigned int i;
+    int indexToDelete = -1;
+    Movie movie, lastMovie;
+    long lastMovieOffset;
+
+    printf("Enter the title of the movie to delete: ");
+    fgets(title, sizeof(title), stdin);
+    title[strcspn(title, "\n")] = '\0';
+
+    for (i = 0; indexes[i] != NULL; i++) {
+        if (strcmp(indexes[i]->title, title) == 0) {
+            indexToDelete = i;
+            break;
+        }
+    }
+
+    if (indexToDelete == -1) {
+        printf("Movie not found.\n");
+        printf("Press any key to return to the main menu\n");
+        getchar();
+        return;
+    }
+
+    fseek(dbPtr, 0, SEEK_END);
+    lastMovieOffset = ftell(dbPtr) - sizeof(Movie);
+
+    if (lastMovieOffset == indexToDelete * sizeof(Movie)) {
+        ftruncate(fileno(dbPtr), lastMovieOffset);
+    } else {
+        fseek(dbPtr, lastMovieOffset, SEEK_SET);
+        fread(&lastMovie, sizeof(Movie), 1, dbPtr);
+
+        fseek(dbPtr, indexToDelete * sizeof(Movie), SEEK_SET);
+        fwrite(&lastMovie, sizeof(Movie), 1, dbPtr);
+
+        // Truncate the file to remove the duplicate last movie
+        ftruncate(fileno(dbPtr), lastMovieOffset);
+
+        // update index
+        for (i = 0; indexes[i] != NULL; i++) {
+            if (strcmp(indexes[i]->title, lastMovie.title) == 0) {
+                indexes[i]->offset = indexToDelete;
+                break;
+            }
+        }
+    }
+    
+    // swap
+    Index *temp = indexes[indexToDelete];
+    indexes[indexToDelete] = indexes[i - 1];
+    indexes[i - 1] = temp;
+    indexes[i - 1] = NULL;
+
+    printf("Movie deleted successfully!\n");
     printf("Press any key to return to the main menu\n");
     getchar();
 }
@@ -205,7 +261,8 @@ int main(void) {
 
     Index *indexes[100];
     initializate_indexes(dbPtr, indexes);
-    display_indexes(indexes);
+    //@DEBUG
+    //display_indexes(indexes);
 
     while (appRunning) {
         char *choices[] = {
@@ -235,8 +292,8 @@ int main(void) {
                  */
                 not_impl("Search movie");
                 break;
-            case 3: 
-                not_impl("Delete movie");
+            case 3:
+                delete_movie(dbPtr, indexes);
                 break;
             case 4:
                 drop_database(dbPtr, indexes);
