@@ -68,12 +68,6 @@ void mock_db(FILE *dbPtr) {
     }
 }
 
-void not_impl(char *msg) {
-    printf("Not implemented: %s\n", msg);
-    printf("Press any key to return to the main menu\n");
-    getchar();
-}
-
 FILE *openFile(const char *filename) {
     FILE *file = fopen(filename, "r+b");
 
@@ -116,8 +110,10 @@ void release_indexes(Index *index[]) {
     }
 }
 
-void add_movie(FILE *dbPtr) {
+void add_movie(FILE *dbPtr, Index *indexes[]) {
     Movie newMovie;
+    Index *newIndex;
+    int i = 0;
 
     printf("Enter movie title: ");
     fgets(newMovie.title, sizeof(newMovie.title), stdin);
@@ -143,6 +139,13 @@ void add_movie(FILE *dbPtr) {
 
     fseek(dbPtr, 0, SEEK_END);
     fwrite(&newMovie, sizeof(Movie), 1, dbPtr);
+
+    while (indexes[i] != NULL) i++;
+    newIndex = (Index *)malloc(sizeof(Index));
+    strcpy(newIndex->title, newMovie.title);
+    newIndex->offset = i;
+    indexes[i] = newIndex;
+    indexes[i + 1] = NULL;
 
     printf("Movie added successfully!\n");
     printf("Press any key to return to the main menu\n");
@@ -237,7 +240,7 @@ void delete_movie(FILE *dbPtr, Index *indexes[]) {
             }
         }
     }
-    
+
     // swap
     Index *temp = indexes[indexToDelete];
     indexes[indexToDelete] = indexes[i - 1];
@@ -245,6 +248,40 @@ void delete_movie(FILE *dbPtr, Index *indexes[]) {
     indexes[i - 1] = NULL;
 
     printf("Movie deleted successfully!\n");
+    printf("Press any key to return to the main menu\n");
+    getchar();
+}
+
+void search_by_title(FILE *dbPtr, Index *indexes[]) {
+    char title[100];
+    Movie movie;
+    bool found = false;
+
+    printf("Enter the title to search: ");
+    fgets(title, sizeof(title), stdin);
+    title[strcspn(title, "\n")] = '\0';
+
+    for (int i = 0; indexes[i] != NULL; i++) {
+        if (strcasecmp(indexes[i]->title, title) == 0) {
+            fseek(dbPtr, indexes[i]->offset * sizeof(Movie), SEEK_SET);
+            fread(&movie, sizeof(Movie), 1, dbPtr);
+
+            printf("--------------------\n");
+            printf("Title: %s\n", movie.title);
+            printf("Year: %d\n", movie.year);
+            printf("Director: %s\n", movie.director);
+            printf("Genre: %d\n", movie.genre);
+            printf("Duration: %d\n", movie.duration);
+            printf("--------------------\n");
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        printf("No movie found with the title \"%s\".\n", title);
+    }
+
     printf("Press any key to return to the main menu\n");
     getchar();
 }
@@ -278,7 +315,7 @@ int main(void) {
 
         switch (choice) {
             case 0:
-                add_movie(dbPtr);
+                add_movie(dbPtr, indexes);
                 break;
             case 1:
                 list_movies(dbPtr);
@@ -290,7 +327,7 @@ int main(void) {
                  * - Search by title, director, genre, year, duration
                  * - Display all movies that match the search criteria
                  */
-                not_impl("Search movie");
+                search_by_title(dbPtr, indexes);
                 break;
             case 3:
                 delete_movie(dbPtr, indexes);
