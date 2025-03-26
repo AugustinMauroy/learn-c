@@ -43,6 +43,7 @@ int multiple_choice(char *choices[], int num_choices, bool keep_after) {
     toggle_cursor(false);
     toggle_canonical(false);
     toggle_echo(false);
+    clear_screen();
     int selected = 0;
 
     // Print all the options initially

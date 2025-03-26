@@ -1,8 +1,12 @@
+// TODO: add modify entry
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 #include "ui.c"
+
+#define MAX_TITLE_LENGTH 100
+#define MAX_DIRECTOR_LENGTH 50
 
 enum Genre {
     ACTION,
@@ -14,23 +18,20 @@ enum Genre {
 };
 
 typedef struct movie {
-    char title[100];
+    char title[MAX_TITLE_LENGTH];
     int year;
-    char director[100];
+    char director[MAX_DIRECTOR_LENGTH];
     enum Genre genre;
     int duration;
 } Movie;
 
-
 typedef struct index {
-    char title[100];
+    char title[MAX_TITLE_LENGTH];
     int offset;
 } Index;
 
-
 void mock_db(FILE *dbPtr) {
     Movie movies[] = {
-        // classic movies
         {"The Shawshank Redemption", 1994, "Frank Darabont", DRAMA, 142},
         {"The Godfather", 1972, "Francis Ford Coppola", DRAMA, 175},
         {"The Dark Knight", 2008, "Christopher Nolan", ACTION, 152},
@@ -38,7 +39,6 @@ void mock_db(FILE *dbPtr) {
         {"The Lord of the Rings: The Return of the King", 2003, "Peter Jackson", ACTION, 201},
         {"Pulp Fiction", 1994, "Quentin Tarantino", THRILLER, 154},
         {"Schindler's List", 1993, "Steven Spielberg", DRAMA, 195},
-        // all star wars movies
         {"Star Wars: Episode I - The Phantom Menace", 1999, "George Lucas", ACTION, 136},
         {"Star Wars: Episode II - Attack of the Clones", 2002, "George Lucas", ACTION, 142},
         {"Star Wars: Episode III - Revenge of the Sith", 2005, "George Lucas", ACTION, 140},
@@ -50,7 +50,6 @@ void mock_db(FILE *dbPtr) {
         {"Star Wars: Episode IX - The Rise of Skywalker", 2019, "J.J. Abrams", ACTION, 142},
         {"Rogue One: A Star Wars Story", 2016, "Gareth Edwards", ACTION, 133},
         {"Solo: A Star Wars Story", 2018, "Ron Howard", ACTION, 135},
-        // all harry potter movies
         {"Harry Potter and the Philosopher's Stone", 2001, "Chris Columbus", ACTION, 152},
         {"Harry Potter and the Chamber of Secrets", 2002, "Chris Columbus", ACTION, 161},
         {"Harry Potter and the Prisoner of Azkaban", 2004, "Alfonso Cuarón", ACTION, 142},
@@ -114,6 +113,7 @@ void add_movie(FILE *dbPtr, Index *indexes[]) {
     Movie newMovie;
     Index *newIndex;
     int i = 0;
+    bool movieExist = false; 
 
     printf("Enter movie title: ");
     fgets(newMovie.title, sizeof(newMovie.title), stdin);
@@ -136,6 +136,21 @@ void add_movie(FILE *dbPtr, Index *indexes[]) {
     printf("Enter duration (in minutes): ");
     scanf("%d", &newMovie.duration);
     getchar(); // Consume leftover newline
+
+    while (indexes[i] != NULL) {
+        if (strcmp(indexes[i]->title, newMovie.title) == 0) {
+            movieExist = true;
+            break;
+        }
+        i++;
+    }
+
+    if (movieExist) {
+        printf("Movie already exists in the database.\n");
+        printf("Press any key to return to the main menu\n");
+        getchar();
+        return;
+    }
 
     fseek(dbPtr, 0, SEEK_END);
     fwrite(&newMovie, sizeof(Movie), 1, dbPtr);
@@ -193,7 +208,7 @@ void drop_database(FILE *dbPtr, Index *indexes[]) {
 }
 
 void delete_movie(FILE *dbPtr, Index *indexes[]) {
-    char title[100];
+    char title[MAX_TITLE_LENGTH];
     unsigned int i;
     int indexToDelete = -1;
     Movie movie, lastMovie;
@@ -252,17 +267,18 @@ void delete_movie(FILE *dbPtr, Index *indexes[]) {
     getchar();
 }
 
-void search_by_title(FILE *dbPtr, Index *indexes[]) {
-    char title[100];
+void search_by_title_or_director(FILE *dbPtr, Index *indexes[]) {
+    char search_term[MAX_TITLE_LENGTH];
     Movie movie;
     bool found = false;
+    int search_option;
 
     printf("Enter the title to search: ");
-    fgets(title, sizeof(title), stdin);
-    title[strcspn(title, "\n")] = '\0';
+    fgets(search_term, sizeof(search_term), stdin);
+    search_term[strcspn(search_term, "\n")] = '\0';
 
     for (int i = 0; indexes[i] != NULL; i++) {
-        if (strcasecmp(indexes[i]->title, title) == 0) {
+        if (strcasecmp(indexes[i]->title, search_term) == 0) {
             fseek(dbPtr, indexes[i]->offset * sizeof(Movie), SEEK_SET);
             fread(&movie, sizeof(Movie), 1, dbPtr);
 
@@ -279,9 +295,97 @@ void search_by_title(FILE *dbPtr, Index *indexes[]) {
     }
 
     if (!found) {
-        printf("No movie found with the title \"%s\".\n", title);
+        printf("No movie found with the title \"%s\".\n", search_term);
+        printf("Do you want to search by director instead?\n");
+        printf("1. Yes\n");
+        printf("2. No\n");
+        printf("Enter your choice: ");
+        scanf("%d", &search_option);
+        getchar(); 
+
+        if (search_option == 1) {
+            printf("Enter the director's name to search: ");
+            fgets(search_term, sizeof(search_term), stdin);
+            search_term[strcspn(search_term, "\n")] = '\0';
+
+            found = false;
+            fseek(dbPtr, 0, SEEK_SET);
+            while (fread(&movie, sizeof(Movie), 1, dbPtr) == 1) {
+                if (strcasecmp(movie.director, search_term) == 0) {
+                    printf("--------------------\n");
+                    printf("Title: %s\n", movie.title);
+                    printf("Year: %d\n", movie.year);
+                    printf("Director: %s\n", movie.director);
+                    printf("Genre: %d\n", movie.genre);
+                    printf("Duration: %d\n", movie.duration);
+                    printf("--------------------\n");
+                    found = true;
+                }
+            }
+
+            if (!found) {
+                printf("No movie found with the director \"%s\".\n", search_term);
+            }
+        }
     }
 
+    printf("Press any key to return to the main menu\n");
+    getchar();
+}
+
+void update_movie(FILE *dbPtr, Index *indexes[]) {
+    char title[MAX_TITLE_LENGTH];
+    unsigned int i;
+    int indexToUpdate = -1;
+    Movie movie;
+
+    printf("Enter the title of the movie to update: ");
+    fgets(title, sizeof(title), stdin);
+    title[strcspn(title, "\n")] = '\0';
+
+    for (i = 0; indexes[i] != NULL; i++) {
+        if (strcmp(indexes[i]->title, title) == 0) {
+            indexToUpdate = i;
+            break;
+        }
+    }
+
+    if (indexToUpdate == -1) {
+        printf("Movie not found.\n");
+        printf("Press any key to return to the main menu\n");
+        getchar();
+        return;
+    }
+
+    fseek(dbPtr, indexToUpdate * sizeof(Movie), SEEK_SET);
+    fread(&movie, sizeof(Movie), 1, dbPtr);
+
+    printf("Enter new title: ");
+    fgets(movie.title, sizeof(movie.title), stdin);
+    movie.title[strcspn(movie.title, "\n")] = '\0';
+
+    printf("Enter new release year: ");
+    scanf("%d", &movie.year);
+    getchar(); // Consume leftover newline
+
+    printf("Enter new director's name: ");
+    fgets(movie.director, sizeof(movie.director), stdin);
+    movie.director[strcspn(movie.director, "\n")] = '\0';
+
+    printf("Select new genre:\n");
+    printf("0: Action\n1: Comedy\n2: Drama\n3: Horror\n4: Romance\n5: Thriller\n");
+    printf("Enter genre number: ");
+    scanf("%d", (int *)&movie.genre);
+    getchar(); // Consume leftover newline
+
+    printf("Enter new duration (in minutes): ");
+    scanf("%d", &movie.duration);
+    getchar(); // Consume leftover newline
+
+    fseek(dbPtr, indexToUpdate * sizeof(Movie), SEEK_SET);
+    fwrite(&movie, sizeof(Movie), 1, dbPtr);
+
+    printf("Movie updated successfully!\n");
     printf("Press any key to return to the main menu\n");
     getchar();
 }
@@ -307,11 +411,12 @@ int main(void) {
             "List movies",
             "Search movie",
             "Delete movie",
+            "Update movie",
             "Drop database",
             "Exit"
         };
 
-        int choice = multiple_choice(choices, 6, false);
+        int choice = multiple_choice(choices,7, false);
 
         switch (choice) {
             case 0:
@@ -321,21 +426,18 @@ int main(void) {
                 list_movies(dbPtr);
                 break;
             case 2:
-                /**
-                 * @todo Implement search movie
-                 * - Need minmum 2 search criteria
-                 * - Search by title, director, genre, year, duration
-                 * - Display all movies that match the search criteria
-                 */
-                search_by_title(dbPtr, indexes);
+                search_by_title_or_director(dbPtr, indexes);
                 break;
             case 3:
                 delete_movie(dbPtr, indexes);
                 break;
             case 4:
-                drop_database(dbPtr, indexes);
+                update_movie(dbPtr, indexes);
                 break;
             case 5:
+                drop_database(dbPtr, indexes);
+                break;
+            case 6:
             default:
                 appRunning = false;
                 break;
