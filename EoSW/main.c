@@ -26,7 +26,7 @@ typedef struct movie {
 
 typedef struct index {
     char title[MAX_TITLE_LENGTH];
-    int offset;
+    int offset; // position in the file
 } Index;
 
 void remove_newline(char *s) {
@@ -82,18 +82,18 @@ FILE *openFile(const char *filename) {
     return file;
 }
 
-void initializate_indexes(FILE *dbPtr, Index *ini_indexes[], size_t indexes_size) {
+void initializate_indexes(FILE *dbPtr, Index *ini_indexes[], size_t *indexes_size) {
     Movie movie;
     Index *index;
-    indexes_size = 0;
+    *indexes_size = 0;
 
     fseek(dbPtr, 0, SEEK_SET);
     while (fread(&movie, sizeof(Movie), 1, dbPtr) == 1) {
         index = (Index *)malloc(sizeof(Index));
         strcpy(index->title, movie.title);
-        index->offset = indexes_size;
-        ini_indexes[indexes_size] = index;
-        indexes_size++;
+        index->offset = *indexes_size;
+        ini_indexes[*indexes_size] = index;
+        (*indexes_size)++; 
     }
 
 }
@@ -130,23 +130,26 @@ void movie_form(bool modify, Movie *movie) {
     getchar(); // Consume leftover newline
 }
 
-void add_movie(FILE *dbPtr, Index *indexes[], size_t indexes_size) {
+
+size_t search_by_title(const char *title, Index *indexes[]) {
+    for (size_t i = 0; indexes[i] != NULL; i++) {
+        if (strcmp(indexes[i]->title, title) == 0) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+void add_movie(FILE *dbPtr, Index *indexes[], size_t *indexes_size) {
     Movie newMovie;
     Index *newIndex;
-    int i = 0;
-    bool movieExist = false; 
 
     movie_form(false, &newMovie);
 
-    while (indexes[i] != NULL) {
-        if (strcmp(indexes[i]->title, newMovie.title) == 0) {
-            movieExist = true;
-            break;
-        }
-        i++;
-    }
-
-    if (movieExist) {
+    size_t offset_is_present = search_by_title(newMovie.title, indexes);
+    
+    if (offset_is_present != -1) {
         printf("Movie already exists in the database.\n");
         printf("Press enter to return to the main menu\n");
         getchar();
@@ -156,10 +159,11 @@ void add_movie(FILE *dbPtr, Index *indexes[], size_t indexes_size) {
     fseek(dbPtr, 0, SEEK_END);
     fwrite(&newMovie, sizeof(Movie), 1, dbPtr);
 
+    (*indexes_size)++;
     newIndex = (Index *)malloc(sizeof(Index));
     strcpy(newIndex->title, newMovie.title);
-    newIndex->offset = indexes_size;
-    indexes[indexes_size] = newIndex;
+    newIndex->offset = *indexes_size;
+    indexes[*indexes_size] = newIndex;
 
     printf("Movie added successfully!\n");
     printf("Press enter to return to the main menu\n");
@@ -191,16 +195,14 @@ void list_movies(FILE *dbPtr) {
     getchar();
 }
 
-void drop_database(FILE *dbPtr, Index *indexes[], size_t indexes_size) {
-    for (int i = 0; indexes[i] != NULL; i++) {
-        free(indexes[i]);
-    }
+void drop_database(FILE *dbPtr, Index *indexes[], size_t *indexes_size) {
+    release_indexes(indexes);
     fclose(dbPtr);
     remove("movies.db");
-    // re-initialize the db
+
     dbPtr = openFile("movies.db");
-    // re-initialize indexes
     initializate_indexes(dbPtr, indexes, indexes_size);
+
     printf("Database dropped successfully!\n");
     printf("Press enter to return to the main menu\n");
     getchar();
@@ -208,8 +210,7 @@ void drop_database(FILE *dbPtr, Index *indexes[], size_t indexes_size) {
 
 void delete_movie(FILE *dbPtr, Index *indexes[]) {
     char title[MAX_TITLE_LENGTH];
-    unsigned int i;
-    int indexToDelete = -1;
+    size_t indexToDelete = -1, i;
     Movie movie, lastMovie;
     long lastMovieOffset;
 
@@ -217,12 +218,7 @@ void delete_movie(FILE *dbPtr, Index *indexes[]) {
     fgets(title, sizeof(title), stdin);
     remove_newline(title);
 
-    for (i = 0; indexes[i] != NULL; i++) {
-        if (strcmp(indexes[i]->title, title) == 0) {
-            indexToDelete = i;
-            break;
-        }
-    }
+    indexToDelete = search_by_title(title, indexes);
 
     if (indexToDelete == -1) {
         printf("Movie not found.\n");
@@ -277,21 +273,20 @@ void search_by_title_or_director(FILE *dbPtr, Index *indexes[]) {
     fgets(search_term, sizeof(search_term), stdin);
     remove_newline(search_term);
 
-    for (int i = 0; indexes[i] != NULL; i++) {
-        if (strcasecmp(indexes[i]->title, search_term) == 0) {
-            fseek(dbPtr, indexes[i]->offset * sizeof(Movie), SEEK_SET);
-            fread(&movie, sizeof(Movie), 1, dbPtr);
+    size_t index = search_by_title(search_term, indexes);
 
-            printf("--------------------\n");
-            printf("Title: %s\n", movie.title);
-            printf("Year: %d\n", movie.year);
-            printf("Director: %s\n", movie.director);
-            printf("Genre: %d\n", movie.genre);
-            printf("Duration: %d\n", movie.duration);
-            printf("--------------------\n");
-            found = true;
-            break;
-        }
+    if (index != -1) {
+        fseek(dbPtr, index * sizeof(Movie), SEEK_SET);
+        fread(&movie, sizeof(Movie), 1, dbPtr);
+
+        printf("--------------------\n");
+        printf("Title: %s\n", movie.title);
+        printf("Year: %d\n", movie.year);
+        printf("Director: %s\n", movie.director);
+        printf("Genre: %d\n", movie.genre);
+        printf("Duration: %d\n", movie.duration);
+        printf("--------------------\n");
+        found = true;
     }
 
     if (!found) {
@@ -336,19 +331,14 @@ void search_by_title_or_director(FILE *dbPtr, Index *indexes[]) {
 void update_movie(FILE *dbPtr, Index *indexes[]) {
     char title[MAX_TITLE_LENGTH];
     unsigned int i;
-    int indexToUpdate = -1;
+    size_t indexToUpdate = -1;
     Movie movie;
 
     printf("Enter the title of the movie to update: ");
     fgets(title, sizeof(title), stdin);
     remove_newline(title);
 
-    for (i = 0; indexes[i] != NULL; i++) {
-        if (strcmp(indexes[i]->title, title) == 0) {
-            indexToUpdate = i;
-            break;
-        }
-    }
+    indexToUpdate = search_by_title(title, indexes);
 
     if (indexToUpdate == -1) {
         printf("Movie not found.\n");
@@ -364,7 +354,7 @@ void update_movie(FILE *dbPtr, Index *indexes[]) {
     printf("Title: %s\n", movie.title);
     printf("Year: %d\n", movie.year);
     printf("Director: %s\n", movie.director);
-    printf("Genre: %s\n", movie.genre);
+    printf("Genre: %d\n", movie.genre);
     printf("Duration: %d\n", movie.duration);
     printf("--------------------\n");
 
@@ -393,7 +383,7 @@ int main(void) {
 
     Index *indexes[100];
     size_t indexes_size;
-    initializate_indexes(dbPtr, indexes, indexes_size);
+    initializate_indexes(dbPtr, indexes, &indexes_size);
 
     while (appRunning) {
         char *choices[] = {
@@ -414,7 +404,7 @@ int main(void) {
 
         switch (choice) {
             case 0:
-                add_movie(dbPtr, indexes, indexes_size);
+                add_movie(dbPtr, indexes, &indexes_size);
                 break;
             case 1:
                 list_movies(dbPtr);
@@ -429,7 +419,7 @@ int main(void) {
                 update_movie(dbPtr, indexes);
                 break;
             case 5:
-                drop_database(dbPtr, indexes, indexes_size);
+                drop_database(dbPtr, indexes, &indexes_size);
                 break;
             case 6:
             default:
