@@ -17,7 +17,7 @@ enum Genre {
 };
 
 typedef struct movie {
-    char title[MAX_TITLE_LENGTH];
+    char title[MAX_TITLE_LENGTH]; // suppose to be unique
     int year;
     char director[MAX_DIRECTOR_LENGTH];
     enum Genre genre;
@@ -26,6 +26,7 @@ typedef struct movie {
 
 typedef struct index {
     char title[MAX_TITLE_LENGTH];
+    // @todo(@AugustinMauroy): put it in size_t and in octet instead of position
     int offset; // position in the file
 } Index;
 
@@ -129,7 +130,6 @@ void movie_form(bool modify, Movie *movie) {
     scanf("%d", &movie->duration);
     getchar(); // Consume leftover newline
 }
-
 
 size_t search_by_title(const char *title, Index *indexes[]) {
     for (size_t i = 0; indexes[i] != NULL; i++) {
