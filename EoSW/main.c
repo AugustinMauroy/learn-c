@@ -1,4 +1,3 @@
-// TODO: add modify entry
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -29,6 +28,12 @@ typedef struct index {
     char title[MAX_TITLE_LENGTH];
     int offset;
 } Index;
+
+void remove_newline(char *s) {
+    char *p=s;
+    while (*p && *p!='\n') p++;
+    *p='\0';
+}
 
 void mock_db(FILE *dbPtr) {
     Movie movies[] = {
@@ -117,7 +122,7 @@ void add_movie(FILE *dbPtr, Index *indexes[]) {
 
     printf("Enter movie title: ");
     fgets(newMovie.title, sizeof(newMovie.title), stdin);
-    newMovie.title[strcspn(newMovie.title, "\n")] = '\0'; // Remove trailing newline
+    remove_newline(newMovie.title);
 
     printf("Enter release year: ");
     scanf("%d", &newMovie.year);
@@ -125,7 +130,7 @@ void add_movie(FILE *dbPtr, Index *indexes[]) {
 
     printf("Enter director's name: ");
     fgets(newMovie.director, sizeof(newMovie.director), stdin);
-    newMovie.director[strcspn(newMovie.director, "\n")] = '\0'; // Remove trailing newline
+    remove_newline(newMovie.director);
 
     printf("Select genre:\n");
     printf("0: Action\n1: Comedy\n2: Drama\n3: Horror\n4: Romance\n5: Thriller\n");
@@ -147,7 +152,7 @@ void add_movie(FILE *dbPtr, Index *indexes[]) {
 
     if (movieExist) {
         printf("Movie already exists in the database.\n");
-        printf("Press any key to return to the main menu\n");
+        printf("Press enter to return to the main menu\n");
         getchar();
         return;
     }
@@ -163,7 +168,7 @@ void add_movie(FILE *dbPtr, Index *indexes[]) {
     indexes[i + 1] = NULL;
 
     printf("Movie added successfully!\n");
-    printf("Press any key to return to the main menu\n");
+    printf("Press enter to return to the main menu\n");
     getchar();
 }
 
@@ -188,7 +193,7 @@ void list_movies(FILE *dbPtr) {
 
     if (!hasMovies) printf("Nothing in db\n");
 
-    printf("Press any key to return to the main menu\n");
+    printf("Press enter to return to the main menu\n");
     getchar();
 }
 
@@ -203,7 +208,7 @@ void drop_database(FILE *dbPtr, Index *indexes[]) {
     // re-initialize indexes
     initializate_indexes(dbPtr, indexes);
     printf("Database dropped successfully!\n");
-    printf("Press any key to return to the main menu\n");
+    printf("Press enter to return to the main menu\n");
     getchar();
 }
 
@@ -216,7 +221,7 @@ void delete_movie(FILE *dbPtr, Index *indexes[]) {
 
     printf("Enter the title of the movie to delete: ");
     fgets(title, sizeof(title), stdin);
-    title[strcspn(title, "\n")] = '\0';
+    remove_newline(title);
 
     for (i = 0; indexes[i] != NULL; i++) {
         if (strcmp(indexes[i]->title, title) == 0) {
@@ -227,7 +232,7 @@ void delete_movie(FILE *dbPtr, Index *indexes[]) {
 
     if (indexToDelete == -1) {
         printf("Movie not found.\n");
-        printf("Press any key to return to the main menu\n");
+        printf("Press enter to return to the main menu\n");
         getchar();
         return;
     }
@@ -260,10 +265,11 @@ void delete_movie(FILE *dbPtr, Index *indexes[]) {
     Index *temp = indexes[indexToDelete];
     indexes[indexToDelete] = indexes[i - 1];
     indexes[i - 1] = temp;
+    free(indexes[i - 1]);
     indexes[i - 1] = NULL;
 
     printf("Movie deleted successfully!\n");
-    printf("Press any key to return to the main menu\n");
+    printf("Press enter to return to the main menu\n");
     getchar();
 }
 
@@ -275,7 +281,7 @@ void search_by_title_or_director(FILE *dbPtr, Index *indexes[]) {
 
     printf("Enter the title to search: ");
     fgets(search_term, sizeof(search_term), stdin);
-    search_term[strcspn(search_term, "\n")] = '\0';
+    remove_newline(search_term);
 
     for (int i = 0; indexes[i] != NULL; i++) {
         if (strcasecmp(indexes[i]->title, search_term) == 0) {
@@ -306,7 +312,7 @@ void search_by_title_or_director(FILE *dbPtr, Index *indexes[]) {
         if (search_option == 1) {
             printf("Enter the director's name to search: ");
             fgets(search_term, sizeof(search_term), stdin);
-            search_term[strcspn(search_term, "\n")] = '\0';
+            remove_newline(search_term);
 
             found = false;
             fseek(dbPtr, 0, SEEK_SET);
@@ -329,7 +335,7 @@ void search_by_title_or_director(FILE *dbPtr, Index *indexes[]) {
         }
     }
 
-    printf("Press any key to return to the main menu\n");
+    printf("Press enter to return to the main menu\n");
     getchar();
 }
 
@@ -341,7 +347,7 @@ void update_movie(FILE *dbPtr, Index *indexes[]) {
 
     printf("Enter the title of the movie to update: ");
     fgets(title, sizeof(title), stdin);
-    title[strcspn(title, "\n")] = '\0';
+    remove_newline(title);
 
     for (i = 0; indexes[i] != NULL; i++) {
         if (strcmp(indexes[i]->title, title) == 0) {
@@ -352,7 +358,7 @@ void update_movie(FILE *dbPtr, Index *indexes[]) {
 
     if (indexToUpdate == -1) {
         printf("Movie not found.\n");
-        printf("Press any key to return to the main menu\n");
+        printf("Press enter to return to the main menu\n");
         getchar();
         return;
     }
@@ -362,7 +368,7 @@ void update_movie(FILE *dbPtr, Index *indexes[]) {
 
     printf("Enter new title: ");
     fgets(movie.title, sizeof(movie.title), stdin);
-    movie.title[strcspn(movie.title, "\n")] = '\0';
+    remove_newline(movie.title);
 
     printf("Enter new release year: ");
     scanf("%d", &movie.year);
@@ -370,7 +376,7 @@ void update_movie(FILE *dbPtr, Index *indexes[]) {
 
     printf("Enter new director's name: ");
     fgets(movie.director, sizeof(movie.director), stdin);
-    movie.director[strcspn(movie.director, "\n")] = '\0';
+    remove_newline(movie.director);
 
     printf("Select new genre:\n");
     printf("0: Action\n1: Comedy\n2: Drama\n3: Horror\n4: Romance\n5: Thriller\n");
@@ -386,7 +392,7 @@ void update_movie(FILE *dbPtr, Index *indexes[]) {
     fwrite(&movie, sizeof(Movie), 1, dbPtr);
 
     printf("Movie updated successfully!\n");
-    printf("Press any key to return to the main menu\n");
+    printf("Press enter to return to the main menu\n");
     getchar();
 }
 
@@ -416,7 +422,11 @@ int main(void) {
             "Exit"
         };
 
-        int choice = multiple_choice(choices,7, false);
+        char *title =
+            "Welcome to the Movie Database 🎞️\n"
+            "--------------------------------\n";
+
+        int choice = multiple_choice(choices,7, false, title);
 
         switch (choice) {
             case 0:
@@ -446,6 +456,8 @@ int main(void) {
 
     fclose(dbPtr);
     release_indexes(indexes);
+
+    printf("Made by Augustin Mauroy (%s on GitHub) for my End of Studies Work.\n", style_text("@AugustinMauroy", GREEN));
 
     return EXIT_SUCCESS;
 }

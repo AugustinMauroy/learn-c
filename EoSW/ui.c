@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <string.h>
+#include "./colors.h"
 
 typedef struct {
     int x;
@@ -39,12 +40,22 @@ void set_cursor_position(vec2 pos) {
     printf("\033[%d;%dH", pos.y, pos.x);
 }
 
-int multiple_choice(char *choices[], int num_choices, bool keep_after) {
+char *style_text(char *text, int style) {
+    char *buffer = malloc(1000);
+    sprintf(buffer, "\033[%dm%s\033[0m", style, text);
+    return buffer;
+}
+
+int multiple_choice(char *choices[], int num_choices, bool keep_after, char *title) {
     toggle_cursor(false);
     toggle_canonical(false);
     toggle_echo(false);
     clear_screen();
     int selected = 0;
+
+    if (title != NULL) {
+        printf("%s\n", title);
+    }
 
     // Print all the options initially
     for (int i = 0; i < num_choices; i++) {
@@ -53,7 +64,7 @@ int multiple_choice(char *choices[], int num_choices, bool keep_after) {
     vec2 pos = get_cursor_position();
     pos.y -= num_choices;
     set_cursor_position(pos);
-    printf("->");
+    printf("%s", style_text("->", BOLD));
 
     while (true) {
         int c = getchar();
@@ -78,7 +89,7 @@ int multiple_choice(char *choices[], int num_choices, bool keep_after) {
                     break;
             }
             set_cursor_position(pos);
-            printf("->");
+            printf("%s", style_text("->", BOLD));
         } else if (c == 10) {
             break;
         }
