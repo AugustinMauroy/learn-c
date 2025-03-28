@@ -24,7 +24,7 @@ int main(void) {
   fseek(fptr, 0, SEEK_SET);
   for (size_t i = 0; i < MAX_NAMES; i++) {
     fread(name, sizeof(char), MAX_NAME_LENGTH, fptr);
-    printf("Name: %s\n", name)
+    printf("Name: %s\n", name);
   }
 
   fclose(fptr);
