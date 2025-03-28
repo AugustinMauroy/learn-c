@@ -182,7 +182,7 @@ void list_movies(FILE *dbPtr) {
     while (fread(&movie, sizeof(Movie), 1, dbPtr) == 1) {
         if (movie_count % page_size == 0) {
             if (movie_count > 0) {
-                printf("--------------------Page %d--------------------\n", page_number - 1);
+                printf("-------------------- Page %d --------------------\n", page_number - 1);
                 printf("Press Enter for next page, or 'q' to quit: ");
                 int c = getchar();
                 if (c == 'q') {
@@ -191,7 +191,8 @@ void list_movies(FILE *dbPtr) {
                 }
                 page_number++;
             }
-            printf("--------------------Page %d--------------------\n", page_number);
+            clear_screen();
+            printf("-------------------- Page %d --------------------\n", page_number);
         }
 
         printf("Title: %s\n", movie.title);
@@ -425,7 +426,7 @@ int main(void) {
         };
 
         char *title =
-            "Welcome to the Movie Database 🎞️\n"
+            "\nWelcome to the Movie Database 🎞️\n"
             "--------------------------------\n";
 
         int choice = multiple_choice(choices,7, false, title);
@@ -459,7 +460,7 @@ int main(void) {
     fclose(dbPtr);
     release_indexes(indexes);
 
-    printf("Made by Augustin Mauroy (%s on GitHub) for my End of Studies Work.\n", style_text("@AugustinMauroy", GREEN));
+    printf("\nMade by Augustin Mauroy (%s on GitHub) for my End of Studies Work.\n\n", style_text("@AugustinMauroy", GREEN));
 
     return EXIT_SUCCESS;
 }
