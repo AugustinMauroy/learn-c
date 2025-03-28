@@ -26,8 +26,7 @@ typedef struct movie {
 
 typedef struct index {
     char title[MAX_TITLE_LENGTH];
-    // @todo(@AugustinMauroy): put it in size_t and in octet instead of position
-    int offset; // position in the file
+    size_t offset; // position in the file
 } Index;
 
 void remove_newline(char *s) {
@@ -92,7 +91,7 @@ void initializate_indexes(FILE *dbPtr, Index *ini_indexes[], size_t *indexes_siz
     while (fread(&movie, sizeof(Movie), 1, dbPtr) == 1) {
         index = (Index *)malloc(sizeof(Index));
         strcpy(index->title, movie.title);
-        index->offset = *indexes_size;
+        index->offset = *indexes_size * sizeof(Movie);
         ini_indexes[*indexes_size] = index;
         (*indexes_size)++; 
     }
@@ -134,7 +133,7 @@ void movie_form(bool modify, Movie *movie) {
 size_t search_by_title(const char *title, Index *indexes[]) {
     for (size_t i = 0; indexes[i] != NULL; i++) {
         if (strcmp(indexes[i]->title, title) == 0) {
-            return i;
+            return indexes[i]->offset;
         }
     }
 
@@ -230,33 +229,36 @@ void delete_movie(FILE *dbPtr, Index *indexes[]) {
     fseek(dbPtr, 0, SEEK_END);
     lastMovieOffset = ftell(dbPtr) - sizeof(Movie);
 
-    if (lastMovieOffset == indexToDelete * sizeof(Movie)) {
+    if (lastMovieOffset == indexToDelete) {
         ftruncate(fileno(dbPtr), lastMovieOffset);
+
+        // update the index
+        for (i = 0; indexes[i] != NULL; i++) {
+            if (strcmp(indexes[i]->title, title) == 0) {
+                free(indexes[i]);
+                indexes[i] = NULL;
+                break;
+            }
+        }
     } else {
         fseek(dbPtr, lastMovieOffset, SEEK_SET);
         fread(&lastMovie, sizeof(Movie), 1, dbPtr);
 
-        fseek(dbPtr, indexToDelete * sizeof(Movie), SEEK_SET);
+        fseek(dbPtr, indexToDelete, SEEK_SET);
         fwrite(&lastMovie, sizeof(Movie), 1, dbPtr);
 
         // Truncate the file to remove the duplicate last movie
         ftruncate(fileno(dbPtr), lastMovieOffset);
 
-        // update index
+        // Update the index
         for (i = 0; indexes[i] != NULL; i++) {
-            if (strcmp(indexes[i]->title, lastMovie.title) == 0) {
-                indexes[i]->offset = indexToDelete;
+            if (strcmp(indexes[i]->title, title) == 0) {
+                free(indexes[i]);
+                indexes[i] = NULL;
                 break;
             }
         }
     }
-
-    // swap
-    Index *temp = indexes[indexToDelete];
-    indexes[indexToDelete] = indexes[i - 1];
-    indexes[i - 1] = temp;
-    free(indexes[i - 1]);
-    indexes[i - 1] = NULL;
 
     printf("Movie deleted successfully!\n");
     printf("Press enter to return to the main menu\n");
@@ -276,7 +278,7 @@ void search_by_title_or_director(FILE *dbPtr, Index *indexes[]) {
     size_t index = search_by_title(search_term, indexes);
 
     if (index != -1) {
-        fseek(dbPtr, index * sizeof(Movie), SEEK_SET);
+        fseek(dbPtr, index, SEEK_SET);
         fread(&movie, sizeof(Movie), 1, dbPtr);
 
         printf("--------------------\n");
@@ -347,7 +349,7 @@ void update_movie(FILE *dbPtr, Index *indexes[]) {
         return;
     }
 
-    fseek(dbPtr, indexToUpdate * sizeof(Movie), SEEK_SET);
+    fseek(dbPtr, indexToUpdate, SEEK_SET);
     fread(&movie, sizeof(Movie), 1, dbPtr);
 
     printf("Current movie details:\n");
@@ -360,10 +362,14 @@ void update_movie(FILE *dbPtr, Index *indexes[]) {
 
     movie_form(true, &movie);
 
-    strcpy(indexes[indexToUpdate]->title, movie.title);
-    fseek(dbPtr, indexToUpdate * sizeof(Movie), SEEK_SET);
+    for (i = 0; indexes[i] != NULL; i++) {
+        if (strcmp(indexes[i]->title, title) == 0) {
+            strcpy(indexes[i]->title, movie.title);
+            break;
+        }
+    }
+    fseek(dbPtr, indexToUpdate, SEEK_SET);
     fwrite(&movie, sizeof(Movie), 1, dbPtr);
-    
 
 
     printf("Movie updated successfully!\n");
