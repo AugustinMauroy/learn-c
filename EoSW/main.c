@@ -172,26 +172,48 @@ void add_movie(FILE *dbPtr, Index *indexes[], size_t *indexes_size) {
 void list_movies(FILE *dbPtr) {
     Movie movie;
     bool hasMovies = false;
+    fseek(dbPtr, 0, SEEK_SET);
+    int page_size = 5;
+    int movie_count = 0;
+    int page_number = 1;
+    bool quit = false;
 
     fseek(dbPtr, 0, SEEK_SET);
-    // @todo(@AugustinMauroy): add a way/function to display movies in a "table" format
-    // also investigate for a pagination system to make it digestible
     while (fread(&movie, sizeof(Movie), 1, dbPtr) == 1) {
-        // hacky way to know when it's the first movie
-        if (!hasMovies) printf("--------------------\n");
+        if (movie_count % page_size == 0) {
+            if (movie_count > 0) {
+                printf("--------------------Page %d--------------------\n", page_number - 1);
+                printf("Press Enter for next page, or 'q' to quit: ");
+                int c = getchar();
+                if (c == 'q') {
+                    quit = true;
+                    break;
+                }
+                page_number++;
+            }
+            printf("--------------------Page %d--------------------\n", page_number);
+        }
+
         printf("Title: %s\n", movie.title);
         printf("Year: %d\n", movie.year);
         printf("Director: %s\n", movie.director);
         printf("Genre: %d\n", movie.genre);
         printf("Duration: %d\n", movie.duration);
-        printf("--------------------\n");
+        if (movie_count % page_size != page_size - 1) printf("--------------------\n");
         hasMovies = true;
+        movie_count++;
     }
 
     if (!hasMovies) printf("Nothing in db\n");
+    if (quit) {
+        printf("Listing interrupted.\n");
+    } else if (hasMovies) {
+        printf("--------------------Page %d--------------------\n", page_number);
+    }
 
     printf("Press enter to return to the main menu\n");
     getchar();
+    return;
 }
 
 void drop_database(FILE *dbPtr, Index *indexes[], size_t *indexes_size) {
