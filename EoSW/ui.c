@@ -1,17 +1,12 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <sys/ioctl.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdarg.h>
-#include <string.h>
 #include "./colors.h"
 
 typedef struct {
     int x;
     int y;
-} vec2;
+} point;
 
 void toggle_cursor(bool show) {
     printf("\033[?25%c", show ? 'h' : 'l');
@@ -29,14 +24,14 @@ void clear_screen(void) {
     system("clear");
 }
 
-vec2 get_cursor_position(void) {
+point get_cursor_position(void) {
     printf("\033[6n");
     int x, y;
     scanf("\033[%d;%dR", &y, &x);
-    return (vec2){x, y};
+    return (point){x, y};
 }
 
-void set_cursor_position(vec2 pos) {
+void set_cursor_position(point pos) {
     printf("\033[%d;%dH", pos.y, pos.x);
 }
 
@@ -46,7 +41,7 @@ char *style_text(char *text, int style) {
     return buffer;
 }
 
-int multiple_choice(char *choices[], int num_choices, bool keep_after, char *title) {
+size_t multiple_choice(char *choices[], size_t num_choices, char *title) {
     toggle_cursor(false);
     toggle_canonical(false);
     toggle_echo(false);
@@ -61,7 +56,7 @@ int multiple_choice(char *choices[], int num_choices, bool keep_after, char *tit
     for (int i = 0; i < num_choices; i++) {
         printf("   %s\n", choices[i]);
     }
-    vec2 pos = get_cursor_position();
+    point pos = get_cursor_position();
     pos.y -= num_choices;
     set_cursor_position(pos);
     printf("%s", style_text("->", BOLD));
@@ -95,8 +90,7 @@ int multiple_choice(char *choices[], int num_choices, bool keep_after, char *tit
         }
     }
 
-    // Todo(@AugustinMauroy): add a way to remove the options and come back to initial position instead of clearing the screen
-    keep_after ? printf("\n") : clear_screen();
+    clear_screen();
     toggle_canonical(true);
     toggle_echo(true);
     toggle_cursor(true);

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <unistd.h>
 #include "ui.c"
 
 #define MAX_TITLE_LENGTH 100
@@ -16,15 +17,15 @@ enum Genre {
     THRILLER
 };
 
-typedef struct movie {
+typedef struct{
     char title[MAX_TITLE_LENGTH]; // suppose to be unique
     int year;
     char director[MAX_DIRECTOR_LENGTH];
     enum Genre genre;
-    int duration;
+    unsigned long duration;
 } Movie;
 
-typedef struct index {
+typedef struct {
     char title[MAX_TITLE_LENGTH];
     size_t offset; // position in the file
 } Index;
@@ -126,7 +127,7 @@ void movie_form(bool modify, Movie *movie) {
     getchar(); // Consume leftover newline
 
     printf("Enter duration (in minutes): ");
-    scanf("%d", &movie->duration);
+    scanf("%lu", &movie->duration);
     getchar(); // Consume leftover newline
 }
 
@@ -169,21 +170,18 @@ void add_movie(FILE *dbPtr, Index *indexes[], size_t *indexes_size) {
     getchar();
 }
 
-void list_movies(FILE *dbPtr) {
+void list_movies(FILE *dbPtr, size_t *indexes_size) {
     Movie movie;
-    bool hasMovies = false;
-    fseek(dbPtr, 0, SEEK_SET);
-    int page_size = 5;
-    int movie_count = 0;
-    int page_number = 1;
-    bool quit = false;
+    bool hasMovies = false, quit = false;
+    int page_size = 5, movie_count = 0, page_number = 1;
+    int page_count = (*indexes_size + page_size - 1) / page_size;
 
     fseek(dbPtr, 0, SEEK_SET);
     while (fread(&movie, sizeof(Movie), 1, dbPtr) == 1) {
         if (movie_count % page_size == 0) {
             if (movie_count > 0) {
-                printf("-------------------- Page %d --------------------\n", page_number - 1);
-                printf("Press Enter for next page, or 'q' to quit: ");
+                printf("-------------------- Page %d of %d --------------------\n", page_number - 1, page_count);
+                printf("Press Enter for next page or 'q' to quit: ");
                 int c = getchar();
                 if (c == 'q') {
                     quit = true;
@@ -192,29 +190,28 @@ void list_movies(FILE *dbPtr) {
                 page_number++;
             }
             clear_screen();
-            printf("-------------------- Page %d --------------------\n", page_number);
+            printf("-------------------- Page %d of %d --------------------\n", page_number, page_count);
         }
-
         printf("Title: %s\n", movie.title);
         printf("Year: %d\n", movie.year);
         printf("Director: %s\n", movie.director);
         printf("Genre: %d\n", movie.genre);
-        printf("Duration: %d\n", movie.duration);
-        if (movie_count % page_size != page_size - 1) printf("--------------------\n");
+        printf("Duration: %lu\n", movie.duration);
+        if ((movie_count + 1) < *indexes_size && (movie_count % page_size != page_size - 1))printf("--------------------\n");
+
         hasMovies = true;
         movie_count++;
+        if (quit) break;
     }
 
-    if (!hasMovies) printf("Nothing in db\n");
-    if (quit) {
-        printf("Listing interrupted.\n");
-    } else if (hasMovies) {
-        printf("--------------------Page %d--------------------\n", page_number);
+    if (!hasMovies) {
+        printf("Nothing in db\n");
+    } else if (!quit) {
+        printf("-------------------- Page %d of %d --------------------\n", page_number, page_count);
     }
 
     printf("Press enter to return to the main menu\n");
     getchar();
-    return;
 }
 
 void drop_database(FILE *dbPtr, Index *indexes[], size_t *indexes_size) {
@@ -309,7 +306,7 @@ void search_by_title_or_director(FILE *dbPtr, Index *indexes[]) {
         printf("Year: %d\n", movie.year);
         printf("Director: %s\n", movie.director);
         printf("Genre: %d\n", movie.genre);
-        printf("Duration: %d\n", movie.duration);
+        printf("Duration: %lu\n", movie.duration);
         printf("--------------------\n");
         found = true;
     }
@@ -337,7 +334,7 @@ void search_by_title_or_director(FILE *dbPtr, Index *indexes[]) {
                     printf("Year: %d\n", movie.year);
                     printf("Director: %s\n", movie.director);
                     printf("Genre: %d\n", movie.genre);
-                    printf("Duration: %d\n", movie.duration);
+                    printf("Duration: %lu\n", movie.duration);
                     printf("--------------------\n");
                     found = true;
                 }
@@ -380,7 +377,7 @@ void update_movie(FILE *dbPtr, Index *indexes[]) {
     printf("Year: %d\n", movie.year);
     printf("Director: %s\n", movie.director);
     printf("Genre: %d\n", movie.genre);
-    printf("Duration: %d\n", movie.duration);
+    printf("Duration: %lu\n", movie.duration);
     printf("--------------------\n");
 
     movie_form(true, &movie);
@@ -429,14 +426,14 @@ int main(void) {
             "\nWelcome to the Movie Database 🎞️\n"
             "--------------------------------\n";
 
-        int choice = multiple_choice(choices,7, false, title);
+        short unsigned int choice = multiple_choice(choices,7, title);
 
         switch (choice) {
             case 0:
                 add_movie(dbPtr, indexes, &indexes_size);
                 break;
             case 1:
-                list_movies(dbPtr);
+                list_movies(dbPtr, &indexes_size);
                 break;
             case 2:
                 search_by_title_or_director(dbPtr, indexes);
